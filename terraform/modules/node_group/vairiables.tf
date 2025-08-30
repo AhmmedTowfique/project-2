@@ -1,34 +1,49 @@
 variable "cluster_name" {
-  description = "Name of EKS cluster"
+  description = "Name of the EKS cluster"
   type        = string
 }
 
 variable "node_group_name" {
-  description = "Name of the node group"
-  default     = "towfique-nodes"
+  description = "Name of the node group (Terraform will prefix with 'towfique-')"
+  type        = string
+  default     = "nodes"
 }
 
 variable "node_role_arn" {
-  description = "IAM Role ARN for Node Group"
+  description = "IAM Role ARN for the Node Group"
+  type        = string
+}
+
+variable "node_role_name" {
+  description = "The IAM role name for the worker nodes"
   type        = string
 }
 
 variable "subnet_ids" {
-  description = "Subnets for the Node Group"
+  description = "List of subnet IDs for the Node Group"
   type        = list(string)
 }
 
 variable "desired_size" {
-  description = "Desired number of nodes"
-  default     = 2
+  description = "Desired number of nodes in the Node Group"
+  type        = number
+  default     = 3
 }
 
 variable "min_size" {
-  description = "Minimum number of nodes"
-  default     = 1
+  description = "Minimum number of nodes in the Node Group"
+  type        = number
+  default     = 3
 }
 
 variable "max_size" {
-  description = "Maximum number of nodes"
+  description = "Maximum number of nodes in the Node Group"
+  type        = number
   default     = 3
+}
+
+variable "key_name" {
+  description = "AWS Key Pair name for SSH access to nodes (optional)"
+  type        = string
+  default     = "git-action-key"
 }
