@@ -20,9 +20,9 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U postgres" 
-          --health-interval=10s 
-          --health-timeout=5s 
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
           --health-retries=5
 
       redis:
@@ -49,8 +49,14 @@ jobs:
           pytest vote/tests || echo "No tests for vote"
 
       # ---------------- SonarCloud Analysis ----------------
-      - name: SonarCloud Scan - Vote UI
+      - name: Install SonarScanner CLI and Run Scan
         run: |
+          curl -L -o sonar-scanner-cli.zip \
+            -H "User-Agent: Mozilla/5.0" \
+            https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.9.3.33185-linux.zip
+          unzip sonar-scanner-cli.zip
+          export PATH=$PWD/sonar-scanner-4.9.3.33185-linux/bin:$PATH
+          sonar-scanner -v
           sonar-scanner \
             -Dsonar.projectKey=project-2-vote \
             -Dsonar.sources=vote \
