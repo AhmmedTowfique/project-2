@@ -48,13 +48,11 @@ jobs:
         run: |
           pytest vote/tests || echo "No tests for vote"
 
-      # ---------------- SonarCloud Analysis ----------------
-      - name: Run SonarQube analysis
+      - name: SonarCloud Scan - Vote
         uses: sonarsource/sonarqube-scan-action@v5.0.0
-        with:
-          args: ''
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_BASE_DIR: vote
 
       # ---------------- RESULT SERVICE ----------------
       - name: Set up Node.js
@@ -65,6 +63,12 @@ jobs:
       - name: Install Node Dependencies
         run: |
           cd result && npm install
+
+      - name: SonarCloud Scan - Result
+        uses: sonarsource/sonarqube-scan-action@v5.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_BASE_DIR: result
 
       - name: Run Result Tests
         run: |
