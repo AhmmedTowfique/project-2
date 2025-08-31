@@ -49,19 +49,13 @@ jobs:
           pytest vote/tests || echo "No tests for vote"
 
       # ---------------- SonarCloud Analysis ----------------
-      - name: Install SonarScanner CLI and Run Scan
-        run: |
-          curl -L -o sonar-scanner-cli.zip \
-            -H "User-Agent: Mozilla/5.0" \
-            https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.9.3.33185-linux.zip
-          unzip sonar-scanner-cli.zip
-          export PATH=$PWD/sonar-scanner-4.9.3.33185-linux/bin:$PATH
-          sonar-scanner -v
-          sonar-scanner \
-            -Dsonar.projectKey=project-2-vote \
-            -Dsonar.sources=vote \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+      - name: SonarCloud Scan - Vote UI
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          organization: vote   # replace with your SonarCloud organization
+          projectKey: project-2-vote
+          projectSources: vote
+          token: ${{ secrets.SONAR_TOKEN }}
 
       # ---------------- RESULT SERVICE ----------------
       - name: Set up Node.js
