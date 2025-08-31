@@ -1,32 +1,24 @@
 FROM node:18-slim
 
-# add curl for healthcheck
+# Add curl and tini for healthchecks / process management
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl tini && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/local/app
 
-# have nodemon available for local dev use (file watching)
-RUN npm install -g nodemon
-
 COPY package*.json ./
-
-RUN npm ci && \
-    npm cache clean --force && \
-    mv /usr/local/app/node_modules /node_modules
+RUN npm ci && npm cache clean --force
 
 COPY . .
 
-# Set default environment variables for both the application and PostgreSQL connection
-ENV PORT=80 \
-    PG_HOST=db \
-    PG_PORT=5432 \
-    PG_USER=postgres \
-    PG_PASSWORD=postgres \
-    PG_DATABASE=postgres
-
-EXPOSE 80
+# Default env vars (can be overridden in Kubernetes)
+ENV PG_HOST=${PG_HOST:-postgres} \
+    PG_PORT=${PG_PORT:-5432} \
+    PG_USER=${PG_USER:-postgres} \
+    PG_PASSWORD=${PG_PASSWORD:-postgres} \
+    PG_DATABASE=${PG_DATABASE:-postgres} \
+    PORT=${PORT:-5001}
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "server.js"]

@@ -5,12 +5,13 @@ import socket
 import random
 import json
 import logging
+import re
 
 # Read options and Redis configuration from environment variables
 option_a = os.getenv('OPTION_A', "Cats")
 option_b = os.getenv('OPTION_B', "Dogs")
 redis_host = os.getenv('REDIS_HOST', 'redis')  # Default to 'redis' for compatibility
-redis_port = int(os.getenv('REDIS_PORT', 6379))  # Default Redis port is 6379
+redis_port = int(os.getenv('REDIS_PORT_OVERRIDE', 6379))  # Default Redis port is 6379
 hostname = socket.gethostname()
 
 app = Flask(__name__)

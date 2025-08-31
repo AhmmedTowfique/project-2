@@ -2,27 +2,28 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy the project file and restore dependencies
-COPY Worker.csproj .
+# Copy project file and restore dependencies
+COPY Worker.csproj ./
 RUN dotnet restore
 
 # Copy the rest of the source code and build
-COPY . .
+COPY . ./
 RUN dotnet publish -c Release -o /app/publish
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
 WORKDIR /app
 
-# Copy the published output from the build stage
+# Copy the published output
 COPY --from=build /app/publish ./
 
-# Set environment variables (can be overridden at runtime)
-ENV DB_HOST=db
-ENV DB_USERNAME=postgres
-ENV DB_PASSWORD=postgres
-ENV DB_NAME=postgres
-ENV REDIS_HOST=redis
+# Default environment variables (can be overridden in Deployment)
+ENV DB_HOST=${DB_HOST:-postgres}
+ENV DB_USERNAME=${DB_USERNAME:-postgres}
+ENV DB_PASSWORD=${DB_PASSWORD:-postgres}
+ENV DB_NAME=${DB_NAME:-postgres}
+ENV REDIS_HOST=${REDIS_HOST:-redis}
+ENV REDIS_PORT=${REDIS_PORT:-6379}
 
-# Define the entry point
+# Entry point
 ENTRYPOINT ["dotnet", "Worker.dll"]

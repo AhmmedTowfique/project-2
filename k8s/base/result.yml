@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: result
+  namespace: voting-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: result
+  template:
+    metadata:
+      labels:
+        app: result
+    spec:
+      containers:
+        - name: result
+          image: towfiqueahmmed/result_app_project2:result-v2
+          ports:
+            - containerPort: 5001
+          env:
+            - name: PG_HOST
+              value: "postgres"
+            - name: PG_PORT
+              value: "5432"
+            - name: PG_USER
+              value: "postgres"
+            - name: PG_PASSWORD
+              value: "postgres"
+            - name: PG_DATABASE
+              value: "postgres"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: result-service
+spec:
+  selector:
+    app: result
+  ports:
+    - protocol: TCP
+      port: 5001
+      targetPort: 5001
+  type: ClusterIP
