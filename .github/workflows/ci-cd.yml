@@ -1,4 +1,4 @@
-name: Voting App CI/CD
+name: Voting App CI/CD with SonarCloud
 
 on:
   push:
@@ -47,6 +47,21 @@ jobs:
       - name: Run Vote Tests
         run: |
           pytest vote/tests || echo "No tests for vote"
+
+      # ---------------- SonarCloud Analysis ----------------
+      - name: Install SonarScanner CLI
+        run: |
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.9.2.63771-linux.zip
+          unzip sonar-scanner-cli-4.9.2.63771-linux.zip
+          export PATH=$PATH:$PWD/sonar-scanner-4.9.2.63771-linux/bin:$PATH
+
+      - name: SonarCloud Scan - Vote UI
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=project-2-vote \
+            -Dsonar.sources=vote \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       # ---------------- RESULT SERVICE ----------------
       - name: Set up Node.js
@@ -118,7 +133,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1   # change if you deployed in another region
+          aws-region: us-east-1
 
       - name: Update kubeconfig for EKS
         run: |
@@ -139,4 +154,3 @@ jobs:
           kubectl rollout status deployment/vote -n voting-app
           kubectl rollout status deployment/result -n voting-app
           kubectl rollout status deployment/worker -n voting-app
-
