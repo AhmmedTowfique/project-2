@@ -24,17 +24,18 @@ spec:
             - name: OPTION_B
               value: "Dogs"
             - name: REDIS_HOST
-              value: "redis"   # must match redis service name later
+              value: "redis" 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: vote
+  name: vote-service
   namespace: voting-app
 spec:
-  type: LoadBalancer
   selector:
     app: vote
   ports:
-    - port: 80
+    - protocol: TCP
+      port: 80
       targetPort: 80
+  type: ClusterIP 
