@@ -118,7 +118,11 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1   # change if using another region
+          aws-region: us-east-1   # change if you deployed in another region
+
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name towfique-project-2-eks-cluster
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v3
@@ -131,7 +135,8 @@ jobs:
           kubectl set image deployment/result result=towfiqueahmmed/result_app_project2:${{ github.sha }} -n voting-app
           kubectl set image deployment/worker worker=towfiqueahmmed/worker_app_project2:${{ github.sha }} -n voting-app
           
-          # Wait for rollouts
+          # Wait until rollouts are finished
           kubectl rollout status deployment/vote -n voting-app
           kubectl rollout status deployment/result -n voting-app
           kubectl rollout status deployment/worker -n voting-app
+
