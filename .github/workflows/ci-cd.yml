@@ -49,13 +49,15 @@ jobs:
           pytest vote/tests || echo "No tests for vote"
 
       # ---------------- SonarCloud Analysis ----------------
-      - name: SonarCloud Scan - Vote UI
-        uses: SonarSource/sonarcloud-github-action@v2
+      - name: Run SonarQube analysis
+        uses: sonarsource/sonarqube-scan-action@v5.0.0
         with:
-          organization: vote   # replace with your SonarCloud organization
-          projectKey: project-2-vote
-          projectSources: vote
-          token: ${{ secrets.SONAR_TOKEN }}
+          args: |
+            -Dsonar.organization=${{ secrets.SONAR_ORG }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.sources=.
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       # ---------------- RESULT SERVICE ----------------
       - name: Set up Node.js
