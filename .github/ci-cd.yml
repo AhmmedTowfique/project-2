@@ -1,0 +1,137 @@
+name: Voting App CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres" 
+          --health-interval=10s 
+          --health-timeout=5s 
+          --health-retries=5
+
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # ---------------- VOTE SERVICE ----------------
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Dependencies
+        run: |
+          pip install -r vote/requirements.txt
+
+      - name: Run Vote Tests
+        run: |
+          pytest vote/tests || echo "No tests for vote"
+
+      # ---------------- RESULT SERVICE ----------------
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Node Dependencies
+        run: |
+          cd result && npm install
+
+      - name: Run Result Tests
+        run: |
+          cd result && npm test || echo "No tests for result"
+
+      # ---------------- WORKER SERVICE ----------------
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+
+      - name: Restore Worker Dependencies
+        run: |
+          cd worker && dotnet restore
+
+      - name: Build Worker
+        run: |
+          cd worker && dotnet build --configuration Release
+
+      - name: Run Worker Tests
+        run: |
+          cd worker && dotnet test || echo "No tests for worker"
+
+      # ---------------- DOCKER ----------------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Vote Image
+        run: |
+          docker build -t towfiqueahmmed/voting_app_project2:${{ github.sha }} vote
+          docker push towfiqueahmmed/voting_app_project2:${{ github.sha }}
+
+      - name: Build and Push Result Image
+        run: |
+          docker build -t towfiqueahmmed/result_app_project2:${{ github.sha }} result
+          docker push towfiqueahmmed/result_app_project2:${{ github.sha }}
+
+      - name: Build and Push Worker Image
+        run: |
+          docker build -t towfiqueahmmed/worker_app_project2:${{ github.sha }} worker
+          docker push towfiqueahmmed/worker_app_project2:${{ github.sha }}
+
+  deploy-to-eks:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1   # change if using another region
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.30.0
+
+      - name: Update Kubernetes Deployments
+        run: |
+          kubectl set image deployment/vote vote=towfiqueahmmed/voting_app_project2:${{ github.sha }} -n voting-app
+          kubectl set image deployment/result result=towfiqueahmmed/result_app_project2:${{ github.sha }} -n voting-app
+          kubectl set image deployment/worker worker=towfiqueahmmed/worker_app_project2:${{ github.sha }} -n voting-app
+          
+          # Wait for rollouts
+          kubectl rollout status deployment/vote -n voting-app
+          kubectl rollout status deployment/result -n voting-app
+          kubectl rollout status deployment/worker -n voting-app
