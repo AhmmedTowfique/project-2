@@ -49,12 +49,6 @@ jobs:
           pytest vote/tests || echo "No tests for vote"
 
       # ---------------- SonarCloud Analysis ----------------
-      - name: Install SonarScanner CLI
-        run: |
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.9.2.63771-linux.zip
-          unzip sonar-scanner-cli-4.9.2.63771-linux.zip
-          export PATH=$PATH:$PWD/sonar-scanner-4.9.2.63771-linux/bin:$PATH
-
       - name: SonarCloud Scan - Vote UI
         run: |
           sonar-scanner \
