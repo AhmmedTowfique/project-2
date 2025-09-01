@@ -50,9 +50,10 @@ jobs:
 
       - name: SonarCloud Scan - Vote
         uses: sonarsource/sonarqube-scan-action@v5.0.0
+        with:
+            args: "-Dproject.settings=vote/sonar-project.properties"
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_BASE_DIR: vote
+            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       # ---------------- RESULT SERVICE ----------------
       - name: Set up Node.js
@@ -66,9 +67,10 @@ jobs:
 
       - name: SonarCloud Scan - Result
         uses: sonarsource/sonarqube-scan-action@v5.0.0
+        with:
+          args: "-Dproject.settings=result/sonar-project.properties"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROJECT_BASE_DIR: result
 
       - name: Run Result Tests
         run: |
