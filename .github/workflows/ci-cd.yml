@@ -41,17 +41,15 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python Dependencies
-        run: |
-          pip install -r vote/requirements.txt
+        run: pip install -r vote/requirements.txt
 
       - name: Run Vote Tests
-        run: |
-          pytest vote/tests || echo "No tests for vote"
+        run: pytest vote/tests
 
       - name: SonarCloud Scan - Vote
-        run: |
-          cd vote
-          sonar-scanner -Dproject.settings=sonar-project.properties
+        uses: sonarsource/sonarqube-scan-action@v5.0.0
+        with:
+          args: "-Dproject.settings=vote/sonar-project.properties"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -62,19 +60,17 @@ jobs:
           node-version: 18
 
       - name: Install Node Dependencies
-        run: |
-          cd result && npm install
-
-      - name: SonarCloud Scan - Result
-        run: |
-          cd result
-          sonar-scanner -Dproject.settings=sonar-project.properties
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: cd result && npm install
 
       - name: Run Result Tests
-        run: |
-          cd result && npm test || echo "No tests for result"
+        run: cd result && npm test
+
+      - name: SonarCloud Scan - Result
+        uses: sonarsource/sonarqube-scan-action@v5.0.0
+        with:
+          args: "-Dproject.settings=result/sonar-project.properties"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       # ---------------- WORKER SERVICE ----------------
       - name: Setup .NET
@@ -83,16 +79,13 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore Worker Dependencies
-        run: |
-          cd worker && dotnet restore
+        run: cd worker && dotnet restore
 
       - name: Build Worker
-        run: |
-          cd worker && dotnet build --configuration Release
+        run: cd worker && dotnet build --configuration Release
 
       - name: Run Worker Tests
-        run: |
-          cd worker && dotnet test || echo "No tests for worker"
+        run: cd worker && dotnet test
 
       # ---------------- DOCKER ----------------
       - name: Set up Docker Buildx
@@ -135,8 +128,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Update kubeconfig for EKS
-        run: |
-          aws eks update-kubeconfig --region us-east-1 --name towfique-project-2-eks-cluster
+        run: aws eks update-kubeconfig --region us-east-1 --name towfique-project-2-eks-cluster
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v3
@@ -148,8 +140,6 @@ jobs:
           kubectl set image deployment/vote vote=towfiqueahmmed/voting_app_project2:${{ github.sha }} -n voting-app
           kubectl set image deployment/result result=towfiqueahmmed/result_app_project2:${{ github.sha }} -n voting-app
           kubectl set image deployment/worker worker=towfiqueahmmed/worker_app_project2:${{ github.sha }} -n voting-app
-          
-          # Wait until rollouts are finished
           kubectl rollout status deployment/vote -n voting-app
           kubectl rollout status deployment/result -n voting-app
           kubectl rollout status deployment/worker -n voting-app
