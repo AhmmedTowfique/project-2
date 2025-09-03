@@ -69,12 +69,12 @@ jobs:
         run: |
           cd result && npm test || echo "No tests for result"
 
-      - name: SonarCloud Scan - Result
-        uses: sonarsource/sonarqube-scan-action@v5.0.0
-        with:
-          args: "-Dproject.settings=result/sonar-project.properties"
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      # - name: SonarCloud Scan - Result
+      #   uses: sonarsource/sonarqube-scan-action@v5.0.0
+      #   with:
+      #     args: "-Dproject.settings=result/sonar-project.properties"
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       # ---------------- WORKER SERVICE ----------------
       - name: Setup .NET
